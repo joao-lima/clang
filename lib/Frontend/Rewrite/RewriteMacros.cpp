@@ -164,10 +164,9 @@ void clang::RewriteMacrosInInput(Preprocessor &PP, raw_ostream *OS) {
     // If the PP token is farther along than the raw token, something was
     // deleted.  Comment out the raw token.
     if (RawOffs <= PPOffs) {
+      unsigned BegPos = RawOffs;
       // Comment out a whole run of tokens instead of bracketing each one with
       // comments.  Add a leading space if RawTok didn't have one.
-      bool HasSpace = RawTok.hasLeadingSpace();
-      RB.InsertTextAfter(RawOffs, &" /*"[HasSpace]);
       unsigned EndPos;
 
       do {
@@ -185,7 +184,7 @@ void clang::RewriteMacrosInInput(Preprocessor &PP, raw_ostream *OS) {
       } while (RawOffs <= PPOffs && !RawTok.isAtStartOfLine() &&
                (PPOffs != RawOffs || !isSameToken(RawTok, PPTok)));
 
-      RB.InsertTextBefore(EndPos, "*/");
+      RB.RemoveText(BegPos, EndPos - BegPos);
       continue;
     }
 
