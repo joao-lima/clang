@@ -1701,6 +1701,7 @@ OMPClause *Parser::ParseOpenMPVarListClause(OpenMPClauseKind Kind) {
     case OMPC_DEPEND_in:
     case OMPC_DEPEND_out:
     case OMPC_DEPEND_inout:
+    case OMPC_DEPEND_cw:
       break;
     case OMPC_DEPEND_unknown:
       Diag(Tok, diag::err_omp_unknown_dependence_type);

@@ -419,6 +419,7 @@ OPENMP_REDUCTION_OPERATOR(custom, "/*custom*/")
 
 // Possible dependence types for 'depend' clause.
 OPENMP_DEPENDENCE_TYPE(in, "in")
+OPENMP_DEPENDENCE_TYPE(cw, "cw")
 OPENMP_DEPENDENCE_TYPE(out, "out")
 OPENMP_DEPENDENCE_TYPE(inout, "inout")
 
