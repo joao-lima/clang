@@ -7725,6 +7725,10 @@ public:
   OMPClause *ActOnOpenMPNumThreadsClause(Expr *NumThreads,
                                          SourceLocation StartLoc,
                                          SourceLocation EndLoc);
+  /// \brief Called on well-formed 'affinity' clause.
+  OMPClause *ActOnOpenMPAffinityClause(Expr *Affinity,
+                                       SourceLocation StartLoc,
+                                       SourceLocation EndLoc);
   /// \brief Called on well-formed 'device' clause.
   OMPClause *ActOnOpenMPDeviceClause(Expr *Device, SourceLocation StartLoc,
                                      SourceLocation EndLoc);

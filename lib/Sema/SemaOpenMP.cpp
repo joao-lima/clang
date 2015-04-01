@@ -4319,6 +4319,9 @@ OMPClause *Sema::ActOnOpenMPSingleExprClause(OpenMPClauseKind Kind, Expr *Expr,
   case OMPC_num_threads:
     Res = ActOnOpenMPNumThreadsClause(Expr, StartLoc, EndLoc);
     break;
+  case OMPC_affinity:
+    Res = ActOnOpenMPAffinityClause(Expr, StartLoc, EndLoc);
+    break;
   case OMPC_collapse:
     Res = ActOnOpenMPCollapseClause(Expr, StartLoc, EndLoc);
     break;
@@ -4377,6 +4380,82 @@ OMPClause *Sema::ActOnOpenMPFinalClause(Expr *Condition,
   }
 
   return new (Context) OMPFinalClause(ValExpr, StartLoc, EndLoc);
+}
+
+OMPClause *Sema::ActOnOpenMPAffinityClause(Expr *Affinity,
+                                             SourceLocation StartLoc,
+                                             SourceLocation EndLoc) {
+  class CConvertDiagnoser : public ICEConvertDiagnoser {
+  public:
+    CConvertDiagnoser() : ICEConvertDiagnoser(true, false, true) {}
+    virtual SemaDiagnosticBuilder diagnoseNotInt(Sema &S, SourceLocation Loc,
+                                                 QualType T) {
+      return S.Diag(Loc, diag::err_typecheck_statement_requires_integer) << T;
+    }
+    virtual SemaDiagnosticBuilder
+    diagnoseIncomplete(Sema &S, SourceLocation Loc, QualType T) {
+      return S.Diag(Loc, diag::err_incomplete_class_type) << T;
+    }
+    virtual SemaDiagnosticBuilder diagnoseExplicitConv(Sema &S,
+                                                       SourceLocation Loc,
+                                                       QualType T,
+                                                       QualType ConvTy) {
+      return S.Diag(Loc, diag::err_explicit_conversion) << T << ConvTy;
+    }
+
+    virtual SemaDiagnosticBuilder
+    noteExplicitConv(Sema &S, CXXConversionDecl *Conv, QualType ConvTy) {
+      return S.Diag(Conv->getLocation(), diag::note_conversion)
+             << ConvTy->isEnumeralType() << ConvTy;
+    }
+    virtual SemaDiagnosticBuilder diagnoseAmbiguous(Sema &S, SourceLocation Loc,
+                                                    QualType T) {
+      return S.Diag(Loc, diag::err_multiple_conversions) << T;
+    }
+
+    virtual SemaDiagnosticBuilder
+    noteAmbiguous(Sema &S, CXXConversionDecl *Conv, QualType ConvTy) {
+      return S.Diag(Conv->getLocation(), diag::note_conversion)
+             << ConvTy->isEnumeralType() << ConvTy;
+    }
+
+    virtual SemaDiagnosticBuilder diagnoseConversion(Sema &S,
+                                                     SourceLocation Loc,
+                                                     QualType T,
+                                                     QualType ConvTy) {
+      llvm_unreachable("conversion functions are permitted");
+    }
+  } ConvertDiagnoser;
+
+  if (!Affinity)
+    return 0;
+
+  Expr *ValExpr = Affinity;
+  if (!ValExpr->isTypeDependent() && !ValExpr->isValueDependent() &&
+      !ValExpr->isInstantiationDependent()) {
+    SourceLocation Loc = Affinity->getExprLoc();
+    ExprResult Value =
+        PerformContextualImplicitConversion(Loc, Affinity, ConvertDiagnoser);
+    if (Value.isInvalid() ||
+        !Value.get()->getType()->isIntegralOrUnscopedEnumerationType())
+      return 0;
+
+    llvm::APSInt Result;
+    if (Value.get()->isIntegerConstantExpr(Result, Context) &&
+        !Result.isStrictlyPositive()) {
+      Diag(Loc, diag::err_negative_expression_in_clause)
+          << Affinity->getSourceRange();
+      return 0;
+    }
+    Value = DefaultLvalueConversion(Value.get());
+    if (Value.isInvalid())
+      return 0;
+    Value = PerformImplicitConversion(
+        Value.get(), Context.getIntTypeForBitwidth(32, true), AA_Converting);
+    ValExpr = Value.get();
+  }
+
+  return new (Context) OMPAffinityClause(ValExpr, StartLoc, EndLoc);
 }
 
 OMPClause *Sema::ActOnOpenMPNumThreadsClause(Expr *NumThreads,

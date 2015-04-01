@@ -1990,6 +1990,8 @@ void OMPClauseEnqueue::VisitOMPFinalClause(const OMPFinalClause *C) {}
 
 void OMPClauseEnqueue::VisitOMPNumThreadsClause(const OMPNumThreadsClause *C) {}
 
+void OMPClauseEnqueue::VisitOMPAffinityClause(const OMPAffinityClause *C) {}
+
 void OMPClauseEnqueue::VisitOMPCollapseClause(const OMPCollapseClause *C) {}
 
 void OMPClauseEnqueue::VisitOMPDefaultClause(const OMPDefaultClause *C) {}

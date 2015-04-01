@@ -230,6 +230,54 @@ public:
 
   StmtRange children() { return StmtRange(&Condition, &Condition + 1); }
 };
+//
+/// \brief This represents 'affinity' clause in the '#pragma omp ...'
+/// directive.
+///
+/// \code
+/// #pragma omp task affinity(a)
+/// \endcode
+/// In this example directive '#pragma omp parallel' has clause 'affinity'
+/// with single expression 'a'.
+///
+class OMPAffinityClause : public OMPClause {
+  friend class OMPClauseReader;
+  /// \brief Affinity.
+  Stmt *Affinity;
+  /// \brief Set a task affinity.
+  ///
+  /// \param E Affinity id.
+  ///
+  void setAffinity(Expr *E) { Affinity = E; }
+
+public:
+  /// \brief Build 'affinity' clause.
+  ///
+  /// \param E Expression associated with this clause.
+  /// \param StartLoc Starting location of the clause.
+  /// \param EndLoc Ending location of the clause.
+  ///
+  OMPAffinityClause(Expr *E, SourceLocation StartLoc, SourceLocation EndLoc)
+      : OMPClause(OMPC_affinity, StartLoc, EndLoc), Affinity(E) {}
+
+  /// \brief Build an empty clause.
+  ///
+  explicit OMPAffinityClause()
+      : OMPClause(OMPC_affinity, SourceLocation(), SourceLocation()),
+        Affinity(0) {}
+
+  /// \brief Return affinity id.
+  Expr *getAffinity() { return dyn_cast_or_null<Expr>(Affinity); }
+
+  /// \brief Return affinity id.
+  Expr *getAffinity() const { return dyn_cast_or_null<Expr>(Affinity); }
+
+  static bool classof(const OMPClause *T) {
+    return T->getClauseKind() == OMPC_affinity;
+  }
+
+  StmtRange children() { return StmtRange(&Affinity, &Affinity+ 1); }
+};
 
 /// \brief This represents 'num_threads' clause in the '#pragma omp ...'
 /// directive.

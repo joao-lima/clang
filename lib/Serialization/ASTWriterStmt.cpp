@@ -1688,6 +1688,10 @@ void OMPClauseWriter::VisitOMPNumThreadsClause(OMPNumThreadsClause *C) {
   Writer.AddStmt(C->getNumThreads());
 }
 
+void OMPClauseWriter::VisitOMPAffinityClause(OMPAffinityClause *C) {
+  Writer.AddStmt(C->getAffinity());
+}
+
 void OMPClauseWriter::VisitOMPCollapseClause(OMPCollapseClause *C) {
   Writer.AddStmt(C->getNumForLoops());
 }

@@ -512,6 +512,12 @@ void OMPClausePrinter::VisitOMPIfClause(OMPIfClause *Node) {
   OS << ")";
 }
 
+void OMPClausePrinter::VisitOMPAffinityClause(OMPAffinityClause *Node) {
+  OS << "affinity(";
+  Node->getAffinity()->printPretty(OS, 0, Policy, 0);
+  OS << ")";
+}
+
 void OMPClausePrinter::VisitOMPNumThreadsClause(OMPNumThreadsClause *Node) {
   OS << "num_threads(";
   Node->getNumThreads()->printPretty(OS, 0, Policy, 0);

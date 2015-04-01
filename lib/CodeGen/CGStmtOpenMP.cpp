@@ -3179,6 +3179,7 @@ void CodeGenFunction::EmitInitOMPClause(const OMPClause &C,
   case OMPC_from:
     EmitInitOMPFromClause(cast<OMPFromClause>(C), S);
     break;
+  case OMPC_affinity:
   case OMPC_default:
   case OMPC_schedule:
   case OMPC_dist_schedule:

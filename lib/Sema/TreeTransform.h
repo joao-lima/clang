@@ -1339,6 +1339,16 @@ public:
     return getSema().ActOnOpenMPNumThreadsClause(NumThreads, StartLoc, EndLoc);
   }
 
+  /// \brief Build a new OpenMP 'affinity' clause.
+  ///
+  /// By default, performs semantic analysis to build the new statement.
+  /// Subclasses may override this routine to provide different behavior.
+  OMPClause *RebuildOMPAffinityClause(Expr *Affinity,
+                                      SourceLocation StartLoc,
+                                      SourceLocation EndLoc) {
+    return getSema().ActOnOpenMPAffinityClause(Affinity, StartLoc, EndLoc);
+  }
+
   /// \brief Build a new OpenMP 'collapse' clause.
   ///
   /// By default, performs semantic analysis to build the new statement.
@@ -7221,6 +7231,19 @@ OMPClause *TreeTransform<Derived>::TransformOMPFinalClause(OMPFinalClause *C) {
 
   return getDerived().RebuildOMPFinalClause(E.get(), C->getLocStart(),
                                             C->getLocEnd());
+}
+
+template <typename Derived>
+OMPClause *
+TreeTransform<Derived>::TransformOMPAffinityClause(OMPAffinityClause *C) {
+  // Transform expression.
+  ExprResult E = getDerived().TransformExpr(C->getAffinity());
+
+  if (E.isInvalid())
+    return 0;
+
+  return getDerived().RebuildOMPAffinityClause(E.get(), C->getLocStart(),
+                                               C->getLocEnd());
 }
 
 template <typename Derived>
