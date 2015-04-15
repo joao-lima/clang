@@ -7153,10 +7153,14 @@ def err_cean_lower_bound_not_integer : Error<
   "lower bound expression has non-integer type %0">;
 def err_cean_length_not_integer : Error<
   "length expression has non-integer type %0">;
+def err_cean_leadingdim_not_integer : Error<
+  "leading dimension expression has non-integer type %0">;
 def err_cean_no_length_for_non_array : Error<
   "cannot define default length for non-array type %0">;
 def err_omp_array_section_length_not_greater_zero : Error<
   "length of the array section must be greater than 0">;
+def err_omp_array_section_leadingdim_not_greater_zero : Error<
+  "leading dimension of the array section must be greater than 0">;
 def err_omp_expected_var_name_or_array_item : Error<
   "expected variable name or an array item">;
 def err_omp_depend_arg_not_lvalue : Error<

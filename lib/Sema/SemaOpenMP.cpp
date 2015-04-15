@@ -7005,6 +7005,15 @@ public:
         End = 0;
         return Result;
       }
+      // Leading Dimension can't be null
+      if (CIE->getLeadingDim()->EvaluateAsInt(Value, SemaRef.getASTContext()) &&
+          ((Value.isSigned() && Value.isNegative()) || !Value)) {
+        SemaRef.Diag(CIE->getExprLoc(),
+                     diag::err_omp_array_section_leadingdim_not_greater_zero)
+            << CIE->getSourceRange();
+        End = 0;
+        return Result;
+      }
       ExprResult Idx = SemaRef.CreateBuiltinBinOp(
           E->getExprLoc(), BO_Add, CIE->getLowerBound(), CIE->getLength());
       if (Idx.isInvalid()) {
@@ -7019,7 +7028,7 @@ public:
         return Result;
       }
       End = SemaRef.CreateBuiltinArraySubscriptExpr(
-                        End, E->getExprLoc(), Idx.get(), E->getExprLoc()).get();
+                        Base, E->getExprLoc(), Idx.get(), E->getExprLoc()).get();
       CIE->setIndexExpr(CIE->getLowerBound());
     } else if (End != Base) {
       End = SemaRef.CreateBuiltinArraySubscriptExpr(End, E->getExprLoc(),
@@ -8560,7 +8569,8 @@ public:
 }
 
 ExprResult Sema::ActOnCEANIndexExpr(Scope *S, Expr *Base, Expr *LowerBound,
-                                    SourceLocation ColonLoc, Expr *Length) {
+                                    SourceLocation ColonLoc, Expr *Length, SourceLocation ColonLoc2,
+                                    Expr *LeadingDim) {
   bool ArgsDep =
       (Base && (Base->isTypeDependent() || Base->isValueDependent() ||
                 Base->isInstantiationDependent() ||
@@ -8569,13 +8579,17 @@ ExprResult Sema::ActOnCEANIndexExpr(Scope *S, Expr *Base, Expr *LowerBound,
        (LowerBound->isTypeDependent() || LowerBound->isValueDependent() ||
         LowerBound->isInstantiationDependent() ||
         LowerBound->containsUnexpandedParameterPack())) ||
+      (LeadingDim &&
+       (LeadingDim->isTypeDependent() || LeadingDim->isValueDependent() ||
+        LeadingDim->isInstantiationDependent() ||
+        LeadingDim->containsUnexpandedParameterPack())) ||
       (Length && (Length->isTypeDependent() || Length->isValueDependent() ||
                   Length->isInstantiationDependent() ||
                   Length->containsUnexpandedParameterPack()));
 
   if (ArgsDep)
     return new (Context)
-        CEANIndexExpr(Base, LowerBound, ColonLoc, Length, Context.IntTy);
+        CEANIndexExpr(Base, LowerBound, ColonLoc, Length, ColonLoc2, LeadingDim, Context.IntTy);
 
   SourceLocation SLoc;
   if (LowerBound)
@@ -8583,10 +8597,12 @@ ExprResult Sema::ActOnCEANIndexExpr(Scope *S, Expr *Base, Expr *LowerBound,
   else
     SLoc = ColonLoc;
   SourceLocation ELoc;
-  if (Length)
+  if (LeadingDim)
+    ELoc = LeadingDim->getLocEnd();
+  else if (Length)
     ELoc = Length->getLocEnd();
   else
-    ELoc = ColonLoc;
+    ELoc = ColonLoc2;
 
   QualType BaseType =
       Base ? Base->getType().getNonReferenceType().getCanonicalType()
@@ -8640,6 +8656,42 @@ ExprResult Sema::ActOnCEANIndexExpr(Scope *S, Expr *Base, Expr *LowerBound,
       return ExprError();
     }
   }
+  if (!LeadingDim) {
+    if(Length)
+      LeadingDim = Length;
+    else {
+      if (!Base)
+        return ExprError();
+      QualType Type = Base->getType().getCanonicalType();
+      if (DeclRefExpr *DRE =
+              dyn_cast_or_null<DeclRefExpr>(Base->IgnoreParenLValueCasts())) {
+        if (ParmVarDecl *PVD = dyn_cast_or_null<ParmVarDecl>(DRE->getDecl())) {
+          Type = PVD->getOriginalType().getNonReferenceType().getCanonicalType();
+        }
+      }
+      if (!Type->isConstantArrayType() && !Type->isVariableArrayType()) {
+        Diag(ColonLoc2, diag::err_cean_no_length_for_non_array) << Base->getType();
+        return ExprError();
+      }
+      const ArrayType *ArrType = Type->castAsArrayTypeUnsafe();
+      if (const ConstantArrayType *ConstArrType =
+              dyn_cast<ConstantArrayType>(ArrType))
+        LeadingDim = ActOnIntegerConstant(
+                     ColonLoc2, ConstArrType->getSize().getZExtValue()).get();
+      else if (const VariableArrayType *VarArrType =
+                   dyn_cast<VariableArrayType>(ArrType))
+        LeadingDim = VarArrType->getSizeExpr();
+      if (!LeadingDim)
+        return ExprError();
+    }
+  } else {
+    CEANExprChecker Checker;
+    if (Checker.Visit(LeadingDim)) {
+      Diag(LeadingDim->getExprLoc(), diag::err_cean_not_in_statement)
+          << LeadingDim->getSourceRange();
+      return ExprError();
+    }
+  }
 
   if (!LowerBound->getType()->isIntegerType()) {
     Diag(LowerBound->getExprLoc(), diag::err_cean_lower_bound_not_integer)
@@ -8651,12 +8703,21 @@ ExprResult Sema::ActOnCEANIndexExpr(Scope *S, Expr *Base, Expr *LowerBound,
         << Length->getType();
     return ExprError();
   }
+  if (!LeadingDim->getType()->isIntegerType()) {
+    Diag(LeadingDim->getExprLoc(), diag::err_cean_leadingdim_not_integer)
+        << LeadingDim->getType();
+    return ExprError();
+  }
 
   ExprResult LowerBoundRes(LowerBound);
   ExprResult LengthRes(Length);
+  ExprResult LeadingDimRes(LeadingDim);
+  // Res types?
   QualType ResType = UsualArithmeticConversions(LowerBoundRes, LengthRes);
   LowerBoundRes = PerformImplicitConversion(LowerBound, ResType, AA_Converting);
   LengthRes = PerformImplicitConversion(Length, ResType, AA_Converting);
+  LeadingDimRes = PerformImplicitConversion(LeadingDim, ResType, AA_Converting);
   return new (Context) CEANIndexExpr(Base, LowerBoundRes.get(), ColonLoc,
-                                     LengthRes.get(), ResType);
+                                     LengthRes.get(), ColonLoc2,
+                                     LeadingDimRes.get(), ResType);
 }

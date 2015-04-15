@@ -2108,9 +2108,11 @@ public:
   /// Subclasses may override this routine to provide different behavior.
   ExprResult RebuildCEANIndexExpr(Expr *Base, Expr *LowerBound,
                                   SourceLocation ColonLoc,
-                                  Expr *Length) {
+                                  Expr *Length,
+                                  SourceLocation ColonLoc2,
+                                  Expr *LeadingDim) {
     return getSema().ActOnCEANIndexExpr(0, Base, LowerBound, ColonLoc,
-                                        Length);
+                                        Length, ColonLoc2, LeadingDim);
   }
 
   /// \brief Build a new call expression.
@@ -8081,17 +8083,23 @@ TreeTransform<Derived>::TransformCEANIndexExpr(CEANIndexExpr *E) {
   ExprResult Length = getDerived().TransformExpr(E->getLength());
   if (Length.isInvalid())
     return ExprError();
+  ExprResult LeadingDim = getDerived().TransformExpr(E->getLeadingDim());
+  if (LeadingDim.isInvalid())
+    return ExprError();
 
   if (!getDerived().AlwaysRebuild() &&
       Base.get() == E->getBase() &&
       LowerBound.get() == E->getLowerBound() &&
+      LeadingDim.get() == E->getLeadingDim() &&
       Length.get() == E->getLength())
     return E;
 
   return getDerived().RebuildCEANIndexExpr(Base.get(),
                                            LowerBound.get(),
                                            E->getColonLoc(),
-                                           Length.get());
+                                           Length.get(),
+                                           E->getColonLoc2(),
+                                           LeadingDim.get());
 }
 
 template<typename Derived>

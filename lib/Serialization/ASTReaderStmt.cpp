@@ -596,6 +596,8 @@ void ASTStmtReader::VisitCEANIndexExpr(CEANIndexExpr *E) {
   E->setLowerBound(Reader.ReadSubExpr());
   E->setColonLoc(ReadSourceLocation(Record, Idx));
   E->setLength(Reader.ReadSubExpr());
+  E->setColonLoc2(ReadSourceLocation(Record, Idx));
+  E->setLeadingDim(Reader.ReadSubExpr());
 }
 
 void ASTStmtReader::VisitCallExpr(CallExpr *E) {

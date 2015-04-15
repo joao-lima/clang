@@ -1252,8 +1252,9 @@ Parser::ParsePostfixExpressionSuffix(ExprResult LHS) {
       ExprResult Idx;
 
       ExprResult CEANLength;
+      ExprResult CEANLeadingDim;
       bool IsCEAN = false;
-      SourceLocation ColonLoc;
+      SourceLocation ColonLoc, ColonLoc2;
       if (getLangOpts().CPlusPlus11 && Tok.is(tok::l_brace)) {
         Diag(Tok, diag::warn_cxx98_compat_generalized_initializer_lists);
         Idx = ParseBraceInitializer();
@@ -1265,10 +1266,16 @@ Parser::ParsePostfixExpressionSuffix(ExprResult LHS) {
         if (Tok.isNot(tok::r_square)) {
           CEANLength = ParseExpression();
         }
+        if(Tok.is(tok::colon))
+        {
+          ColonLoc2 = ConsumeToken();
+          if(Tok.isNot(tok::r_square))
+            CEANLeadingDim = ParseExpression();
+        }
       } else if (IsCEANAllowed) {
         ColonProtectionRAIIObject CPRAII(*this);
         Idx = ParseExpression();
-        if (IsCEANAllowed && Tok.is(tok::colon)) {
+        if (Tok.is(tok::colon)) {
           // '[' <expr> ':'
           IsCEAN = true;
           ColonLoc = ConsumeToken();
@@ -1276,12 +1283,19 @@ Parser::ParsePostfixExpressionSuffix(ExprResult LHS) {
           if (Tok.isNot(tok::colon) && Tok.isNot(tok::r_square)) {
             CEANLength = ParseExpression();
           }
+        if(Tok.is(tok::colon))
+        {
+          ColonLoc2 = ConsumeToken();
+          if(Tok.isNot(tok::r_square))
+          CEANLeadingDim = ParseExpression();
+        }
         }
       } else
         Idx = ParseExpression();
-      if (IsCEAN && !Idx.isInvalid() && !CEANLength.isInvalid()) {
+      if (IsCEAN && !Idx.isInvalid() && !CEANLength.isInvalid() && !CEANLeadingDim.isInvalid()) {
           Idx = Actions.ActOnCEANIndexExpr(getCurScope(), LHS.get(), Idx.get(),
-                                           ColonLoc, CEANLength.get());
+                                           ColonLoc, CEANLength.get(), ColonLoc2,
+                                           CEANLeadingDim.get());
       }
 
       SourceLocation RLoc = Tok.getLocation();

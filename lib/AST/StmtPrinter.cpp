@@ -1432,6 +1432,9 @@ void StmtPrinter::VisitCEANIndexExpr(CEANIndexExpr *Node) {
   OS << ":";
   if (Node->getLength() && Node->getLength()->getLocStart().isValid())
     PrintExpr(Node->getLength());
+  OS << ":";
+  if (Node->getLeadingDim() && Node->getLeadingDim()->getLocStart().isValid())
+    PrintExpr(Node->getLeadingDim());
 }
 
 void StmtPrinter::PrintCallArgs(CallExpr *Call) {

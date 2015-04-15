@@ -4844,35 +4844,42 @@ public:
 
 /// CEANIndexExpr - CEAN index triplet.
 class CEANIndexExpr : public Expr {
-  enum { BASE, LOWER_BOUND, LENGTH, INDEX_EXPR, END_EXPR };
+  enum { BASE, LOWER_BOUND, LENGTH, LD, INDEX_EXPR, END_EXPR };
   Stmt* SubExprs[END_EXPR];
   SourceLocation ColonLoc;
+  SourceLocation ColonLoc2;
 public:
   CEANIndexExpr(Expr *Base, Expr *LowerBound, SourceLocation ColonLoc,
-                Expr *Length, QualType QTy)
+                Expr *Length, SourceLocation ColonLoc2, Expr *LeadingDim,
+                QualType QTy)
   : Expr(CEANIndexExprClass, QTy, VK_RValue, OK_Ordinary,
          (Base && Base->isTypeDependent()) ||
          (LowerBound && LowerBound->isTypeDependent()) ||
          (Length && Length->isTypeDependent()),
          (Base && Base->isValueDependent()) ||
          (LowerBound && LowerBound->isValueDependent()) ||
+         (LeadingDim && LeadingDim->isValueDependent()) ||
          (Length && Length->isValueDependent()),
          ((Base && Base->isInstantiationDependent()) ||
           (LowerBound && LowerBound->isInstantiationDependent()) ||
+          (LeadingDim && LeadingDim->isInstantiationDependent()) ||
           (Length && Length->isInstantiationDependent())),
          ((Base && Base->containsUnexpandedParameterPack()) ||
           (LowerBound && LowerBound->containsUnexpandedParameterPack()) ||
+          (LeadingDim && LeadingDim->containsUnexpandedParameterPack()) ||
           (Length && Length->containsUnexpandedParameterPack()))),
-    ColonLoc(ColonLoc) {
+    ColonLoc(ColonLoc),
+    ColonLoc2(ColonLoc2) {
     SubExprs[BASE] = Base;
     SubExprs[LOWER_BOUND] = LowerBound;
     SubExprs[LENGTH] = Length;
     SubExprs[INDEX_EXPR] = 0;
+    SubExprs[LD] = LeadingDim;
   }
 
   /// \brief Create an empty CEAN index expression.
   explicit CEANIndexExpr(EmptyShell Shell)
-    : Expr(CEANIndexExprClass, Shell), ColonLoc() { }
+    : Expr(CEANIndexExprClass, Shell), ColonLoc(), ColonLoc2() { }
 
   Expr *getBase() { return dyn_cast_or_null<Expr>(SubExprs[BASE]); }
   const Expr *getBase() const { return dyn_cast_or_null<Expr>(SubExprs[BASE]); }
@@ -4892,6 +4899,12 @@ public:
   }
   void setLength(Expr *E) { SubExprs[LENGTH] = E; }
 
+  Expr *getLeadingDim() { return dyn_cast_or_null<Expr>(SubExprs[LD]); }
+  const Expr *getLeadingDim() const {
+    return dyn_cast_or_null<Expr>(SubExprs[LD]);
+  }
+  void setLeadingDim(Expr *E) { SubExprs[LD] = E; }
+
   Expr *getIndexExpr() {
     return SubExprs[INDEX_EXPR] ? cast<Expr>(SubExprs[INDEX_EXPR]) : 0;
   }
@@ -4901,14 +4914,19 @@ public:
   void setIndexExpr(Expr *E) { SubExprs[INDEX_EXPR] = E; }
 
   SourceLocation getLocStart() const LLVM_READONLY {
-    return getLowerBound()->getLocStart();
+    return getBase()->getLocEnd();
   }
   SourceLocation getLocEnd() const LLVM_READONLY {
-    return getLength()->getLocEnd();
+    if(getLeadingDim())
+      return getLeadingDim()->getLocEnd();
+    else
+      return getColonLoc2();
   }
 
   SourceLocation getColonLoc() const LLVM_READONLY { return ColonLoc; }
   void setColonLoc(SourceLocation L) { ColonLoc = L; }
+  SourceLocation getColonLoc2() const LLVM_READONLY { return ColonLoc2; }
+  void setColonLoc2(SourceLocation L) { ColonLoc2 = L; }
 
   SourceLocation getExprLoc() const LLVM_READONLY {
     return getLocStart();
