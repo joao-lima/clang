@@ -5110,9 +5110,11 @@ OMPClause *Sema::ActOnOpenMPScheduleClause(OpenMPScheduleClauseKind Kind,
     // OpenMP [2.5.1, Loop Construct, Description, Table 2-1]
     //  dynamic       When no chunk_size is specified, it defaults to 1.
     //  guided        When no chunk_size is specified, it defaults to 1.
+    //  adaptive      When no chunk_size is specified, it defaults to 1.
     switch (Kind) {
     case OMPC_SCHEDULE_dynamic:
     case OMPC_SCHEDULE_guided:
+    case OMPC_SCHEDULE_adaptive:
       Value = ActOnIntegerConstant(StartLoc, 1);
       break;
     default:
