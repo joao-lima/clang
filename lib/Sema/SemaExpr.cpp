@@ -3877,7 +3877,7 @@ Sema::CreateBuiltinArraySubscriptExpr(Expr *Base, SourceLocation LLoc,
     IndexExpr = RHSExp;
     if(isa<CEANIndexExpr>(IndexExpr)) {
       ResultType = LHSTy;
-    } else {
+    } else {
       ResultType = PTy->getPointeeType();
     }
   } else if (const ObjCObjectPointerType *PTy =

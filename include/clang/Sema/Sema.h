@@ -7905,11 +7905,12 @@ public:
                                                  SourceLocation EndLoc);
   OMPClause *ActOnOpenMPSingleExprWithTypeClause(
       OpenMPClauseKind Kind, unsigned Argument, SourceLocation ArgumentLoc,
-      Expr *Expr, SourceLocation StartLoc, SourceLocation EndLoc);
+      Expr *E, Expr* P, SourceLocation StartLoc, SourceLocation EndLoc);
   /// \brief Called on well-formed 'schedule' clause.
   OMPClause *ActOnOpenMPScheduleClause(OpenMPScheduleClauseKind Argument,
                                        SourceLocation ArgumentLoc,
-                                       Expr *ChunkSize, SourceLocation StartLoc,
+                                       Expr *ChunkSize, Expr* ParGrainSize,
+                                       SourceLocation StartLoc,
                                        SourceLocation EndLoc);
   /// \brief Called on well-formed 'dist_schedule' clause.
   OMPClause *

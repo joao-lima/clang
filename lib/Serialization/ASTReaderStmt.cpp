@@ -1844,6 +1844,7 @@ void OMPClauseReader::VisitOMPScheduleClause(OMPScheduleClause *C) {
        static_cast<OpenMPScheduleClauseKind>(Record[Idx++]));
   C->setScheduleKindLoc(this->ReadSourceLocation(Record, Idx));
   C->setChunkSize(Reader.ReadSubExpr());
+  C->setParGrainSize(Reader.ReadSubExpr());
 }
 
 void OMPClauseReader::VisitOMPDistScheduleClause(OMPDistScheduleClause *C) {

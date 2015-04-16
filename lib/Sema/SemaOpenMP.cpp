@@ -4999,17 +4999,17 @@ OMPClause *Sema::ActOnOpenMPMergeableClause(SourceLocation StartLoc,
 
 OMPClause *Sema::ActOnOpenMPSingleExprWithTypeClause(
     OpenMPClauseKind Kind, unsigned Argument, SourceLocation ArgumentLoc,
-    Expr *Expr, SourceLocation StartLoc, SourceLocation EndLoc) {
+    Expr *E, Expr *Grain, SourceLocation StartLoc, SourceLocation EndLoc) {
   OMPClause *Res = 0;
   switch (Kind) {
   case OMPC_schedule:
     Res = ActOnOpenMPScheduleClause(
-        static_cast<OpenMPScheduleClauseKind>(Argument), ArgumentLoc, Expr,
+        static_cast<OpenMPScheduleClauseKind>(Argument), ArgumentLoc, E, Grain,
         StartLoc, EndLoc);
     break;
   case OMPC_dist_schedule:
     Res = ActOnOpenMPDistScheduleClause(
-        static_cast<OpenMPDistScheduleClauseKind>(Argument), ArgumentLoc, Expr,
+        static_cast<OpenMPDistScheduleClauseKind>(Argument), ArgumentLoc, E,
         StartLoc, EndLoc);
     break;
   default:
@@ -5021,6 +5021,7 @@ OMPClause *Sema::ActOnOpenMPSingleExprWithTypeClause(
 OMPClause *Sema::ActOnOpenMPScheduleClause(OpenMPScheduleClauseKind Kind,
                                            SourceLocation KindLoc,
                                            Expr *ChunkSize,
+                                           Expr *ParGrainSize,
                                            SourceLocation StartLoc,
                                            SourceLocation EndLoc) {
   class CConvertDiagnoser : public ICEConvertDiagnoser {
@@ -5089,6 +5090,7 @@ OMPClause *Sema::ActOnOpenMPScheduleClause(OpenMPScheduleClauseKind Kind,
     return 0;
   }
   ExprResult Value;
+  ExprResult GrainValue;
   if (ChunkSize) {
     if (!ChunkSize->isTypeDependent() && !ChunkSize->isValueDependent() &&
         !ChunkSize->isInstantiationDependent()) {
@@ -5121,10 +5123,31 @@ OMPClause *Sema::ActOnOpenMPScheduleClause(OpenMPScheduleClauseKind Kind,
       break;
     }
   }
+  if(ParGrainSize) {
+    if (!ParGrainSize->isTypeDependent() && !ParGrainSize->isValueDependent() &&
+        !ParGrainSize->isInstantiationDependent()) {
+      SourceLocation Loc = ParGrainSize->getExprLoc();
+      GrainValue =
+          PerformContextualImplicitConversion(Loc, ParGrainSize, ConvertDiagnoser);
+      if (GrainValue.isInvalid())
+        return 0;
+
+      llvm::APSInt Result;
+      if (GrainValue.get()->isIntegerConstantExpr(Result, Context) &&
+          !Result.isStrictlyPositive()) {
+        Diag(Loc, diag::err_negative_expression_in_clause)
+            << ParGrainSize->getSourceRange();
+        return 0;
+      }
+    }
+  }
+  else
+    GrainValue = Value;
   Expr *ValExpr = Value.get();
+  Expr *GrainExpr = GrainValue.get();
 
   return new (Context)
-      OMPScheduleClause(Kind, KindLoc, ValExpr, StartLoc, EndLoc);
+      OMPScheduleClause(Kind, KindLoc, ValExpr, GrainExpr, StartLoc, EndLoc);
 }
 
 OMPClause *Sema::ActOnOpenMPDistScheduleClause(

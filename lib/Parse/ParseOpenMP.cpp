@@ -1513,6 +1513,7 @@ OMPClause *Parser::ParseOpenMPSingleExprWithTypeClause(OpenMPClauseKind Kind) {
                       : getOpenMPSimpleClauseType(Kind, PP.getSpelling(Tok));
   SourceLocation TypeLoc = Tok.getLocation();
   ExprResult Val = ExprError();
+  ExprResult ParGrain = ExprError();
   if (Tok.isNot(tok::r_paren) && Tok.isNot(tok::comma) &&
       Tok.isNot(tok::annot_pragma_openmp_end))
     ConsumeAnyToken();
@@ -1520,6 +1521,11 @@ OMPClause *Parser::ParseOpenMPSingleExprWithTypeClause(OpenMPClauseKind Kind) {
     ConsumeAnyToken();
     ExprResult LHS(ParseCastExpression(false, false, NotTypeCast));
     Val = ParseRHSOfBinaryExpression(LHS, prec::Conditional);
+    if (Tok.is(tok::comma)) {
+      ConsumeAnyToken();
+      ExprResult LHS(ParseCastExpression(false, false, NotTypeCast));
+      ParGrain = ParseRHSOfBinaryExpression(LHS, prec::Conditional);
+    }
   }
   if (LParen && Tok.isNot(tok::r_paren)) {
     Diag(Tok, diag::err_expected_rparen);
@@ -1532,7 +1538,7 @@ OMPClause *Parser::ParseOpenMPSingleExprWithTypeClause(OpenMPClauseKind Kind) {
     ConsumeAnyToken();
 
   return Actions.ActOnOpenMPSingleExprWithTypeClause(
-      Kind, Type, TypeLoc, Val.get(), Loc, Tok.getLocation());
+      Kind, Type, TypeLoc, Val.get(), ParGrain.get(), Loc, Tok.getLocation());
 }
 
 /// \brief Parsing of simple OpenMP clauses like 'default' or 'proc_bind'.

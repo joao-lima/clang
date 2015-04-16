@@ -1400,10 +1400,11 @@ public:
   OMPClause *RebuildOMPScheduleClause(OpenMPScheduleClauseKind Kind,
                                       SourceLocation KindLoc,
                                       Expr *ChunkSize,
+                                      Expr *ParGrainSize,
                                       SourceLocation StartLoc,
                                       SourceLocation EndLoc) {
     return getSema().ActOnOpenMPScheduleClause(Kind, KindLoc, ChunkSize,
-                                               StartLoc, EndLoc);
+                                               ParGrainSize, StartLoc, EndLoc);
   }
 
   /// \brief Build a new OpenMP 'dist_schedule' clause.
@@ -1438,13 +1439,14 @@ public:
   /// Subclasses may override this routine to provide different behavior.
   OMPClause *RebuildOMPScheduleClause(OpenMPScheduleClauseKind Kind,
                                       Expr *ChunkSize,
+                                      Expr *ParGrainSize,
                                       SourceLocation StartLoc,
                                       SourceLocation LParenLoc,
                                       SourceLocation KindLoc,
                                       SourceLocation CommaLoc,
                                       SourceLocation EndLoc) {
     return getSema().ActOnOpenMPScheduleClause(
-        Kind, ChunkSize, StartLoc, LParenLoc, KindLoc, CommaLoc, EndLoc);
+        Kind, ChunkSize, ParGrainSize, StartLoc, LParenLoc, KindLoc, CommaLoc, EndLoc);
   }
 
   /// \brief Build a new OpenMP 'private' clause.
@@ -7314,10 +7316,18 @@ TreeTransform<Derived>::TransformOMPScheduleClause(OMPScheduleClause *C) {
     if (E.isInvalid())
       return 0;
   }
+  // Transform expression.
+  ExprResult P;
+  if (C->getParGrainSize()) {
+    P = getDerived().TransformExpr(C->getParGrainSize());
+
+    if (P.isInvalid())
+      return 0;
+  }
 
   return getDerived().RebuildOMPScheduleClause(
-      C->getScheduleKind(), C->getScheduleKindLoc(), E.get(), C->getLocStart(),
-      C->getLocEnd());
+      C->getScheduleKind(), C->getScheduleKindLoc(), E.get(), P.get(),
+      C->getLocStart(), C->getLocEnd());
 }
 
 template <typename Derived>

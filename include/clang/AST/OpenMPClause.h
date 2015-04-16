@@ -1632,6 +1632,8 @@ class OMPScheduleClause : public OMPClause {
   SourceLocation KindLoc;
   /// \brief Chunk size.
   Stmt *ChunkSize;
+  /// \brief Parallel Grain size.
+  Stmt *ParGrainSize;
 
   /// \brief Set kind of the clauses.
   ///
@@ -1648,6 +1650,11 @@ class OMPScheduleClause : public OMPClause {
   /// \param E Chunk size.
   ///
   void setChunkSize(Expr *E) { ChunkSize = E; }
+  /// \brief Set parallel grain size.
+  ///
+  /// \param E Parallel Grain size.
+  ///
+  void setParGrainSize(Expr *E) { ParGrainSize = E; }
 
 public:
   /// \brief Build 'schedule' clause with argument \a Kind and
@@ -1660,15 +1667,16 @@ public:
   /// \brief EndLoc Ending location of the clause.
   ///
   OMPScheduleClause(OpenMPScheduleClauseKind K, SourceLocation KLoc, Expr *E,
-                    SourceLocation StartLoc, SourceLocation EndLoc)
+                    Expr *P, SourceLocation StartLoc, SourceLocation EndLoc)
       : OMPClause(OMPC_schedule, StartLoc, EndLoc), Kind(K), KindLoc(KLoc),
-        ChunkSize(E) {}
+        ChunkSize(E), ParGrainSize(P) {}
 
   /// \brief Build an empty clause.
   ///
   explicit OMPScheduleClause()
       : OMPClause(OMPC_schedule, SourceLocation(), SourceLocation()),
-        Kind(OMPC_SCHEDULE_unknown), KindLoc(SourceLocation()), ChunkSize(0) {}
+        Kind(OMPC_SCHEDULE_unknown), KindLoc(SourceLocation()), ChunkSize(0),
+        ParGrainSize(0) {}
 
   /// \brief Get kind of the clause.
   ///
@@ -1682,12 +1690,18 @@ public:
   /// \brief Get chunk size.
   ///
   Expr *getChunkSize() const { return dyn_cast_or_null<Expr>(ChunkSize); }
+  /// \brief Get parallel grain size.
+  ///
+  Expr *getParGrainSize() { return dyn_cast_or_null<Expr>(ParGrainSize); }
+  /// \brief Get parallel grain size.
+  ///
+  Expr *getParGrainSize() const { return dyn_cast_or_null<Expr>(ParGrainSize); }
 
   static bool classof(const OMPClause *T) {
     return T->getClauseKind() == OMPC_schedule;
   }
 
-  StmtRange children() { return StmtRange(&ChunkSize, &ChunkSize + 1); }
+  StmtRange children() { return StmtRange(&ChunkSize, &ChunkSize + 2); }
 };
 
 /// \brief This represents 'dist_schedule' clause in the '#pragma omp ...'

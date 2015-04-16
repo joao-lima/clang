@@ -702,6 +702,10 @@ void OMPClausePrinter::VisitOMPScheduleClause(OMPScheduleClause *Node) {
   if (Node->getChunkSize()) {
     OS << ", ";
     Node->getChunkSize()->printPretty(OS, 0, Policy, 0);
+    if (Node->getParGrainSize()) {
+      OS << ", ";
+      Node->getParGrainSize()->printPretty(OS, 0, Policy, 0);
+    }
   }
   OS << ")";
 }
