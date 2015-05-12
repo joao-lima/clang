@@ -424,6 +424,7 @@ OPENMP_DEPENDENCE_TYPE(in, "in")
 OPENMP_DEPENDENCE_TYPE(cw, "cw")
 OPENMP_DEPENDENCE_TYPE(out, "out")
 OPENMP_DEPENDENCE_TYPE(inout, "inout")
+OPENMP_DEPENDENCE_TYPE(commute, "commute")
 
 // Static attributes for 'schedule' clause.
 OPENMP_SCHEDULE_KIND(static)

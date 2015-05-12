@@ -2547,6 +2547,7 @@ static std::pair<llvm::Value *, unsigned> ProcessDependAddresses(
         break;
       case OMPC_DEPEND_inout:
       case OMPC_DEPEND_cw:
+      case OMPC_DEPEND_commute:
         DepType = INOUT;
         break;
       case OMPC_DEPEND_unknown:

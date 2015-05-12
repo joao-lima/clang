@@ -185,6 +185,7 @@ struct kmp_depend_info_t {};
 const unsigned char IN = 1;
 const unsigned char OUT = 2;
 const unsigned char INOUT = 3;
+const unsigned char COMMUTE = 4;
 typedef int32_t(__kmpc_omp_task_with_deps)(ident_t *loc, int32_t gtid,
                                            kmp_task_t *task, int32_t ndeps,
                                            kmp_depend_info_t *dep_list,
