@@ -1349,6 +1349,16 @@ public:
     return getSema().ActOnOpenMPAffinityClause(Affinity, StartLoc, EndLoc);
   }
 
+  /// \brief Build a new OpenMP 'priority' clause.
+  ///
+  /// By default, performs semantic analysis to build the new statement.
+  /// Subclasses may override this routine to provide different behavior.
+  OMPClause *RebuildOMPPriorityClause(Expr *Priority,
+                                      SourceLocation StartLoc,
+                                      SourceLocation EndLoc) {
+    return getSema().ActOnOpenMPPriorityClause(Priority, StartLoc, EndLoc);
+  }
+
   /// \brief Build a new OpenMP 'collapse' clause.
   ///
   /// By default, performs semantic analysis to build the new statement.
@@ -7247,6 +7257,19 @@ TreeTransform<Derived>::TransformOMPAffinityClause(OMPAffinityClause *C) {
     return 0;
 
   return getDerived().RebuildOMPAffinityClause(E.get(), C->getLocStart(),
+                                               C->getLocEnd());
+}
+
+template <typename Derived>
+OMPClause *
+TreeTransform<Derived>::TransformOMPPriorityClause(OMPPriorityClause *C) {
+  // Transform expression.
+  ExprResult E = getDerived().TransformExpr(C->getPriority());
+
+  if (E.isInvalid())
+    return 0;
+
+  return getDerived().RebuildOMPPriorityClause(E.get(), C->getLocStart(),
                                                C->getLocEnd());
 }
 

@@ -518,6 +518,12 @@ void OMPClausePrinter::VisitOMPAffinityClause(OMPAffinityClause *Node) {
   OS << ")";
 }
 
+void OMPClausePrinter::VisitOMPPriorityClause(OMPPriorityClause *Node) {
+  OS << "priority(";
+  Node->getPriority()->printPretty(OS, 0, Policy, 0);
+  OS << ")";
+}
+
 void OMPClausePrinter::VisitOMPNumThreadsClause(OMPNumThreadsClause *Node) {
   OS << "num_threads(";
   Node->getNumThreads()->printPretty(OS, 0, Policy, 0);

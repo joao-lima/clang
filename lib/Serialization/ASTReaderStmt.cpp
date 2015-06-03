@@ -1685,6 +1685,9 @@ OMPClause *OMPClauseReader::readClause() {
   case OMPC_affinity:
     C = new (Context) OMPAffinityClause();
     break;
+  case OMPC_priority:
+    C = new (Context) OMPPriorityClause();
+    break;
   case OMPC_num_teams:
     C = new (Context) OMPNumTeamsClause();
     break;
@@ -1817,6 +1820,10 @@ void OMPClauseReader::VisitOMPNumThreadsClause(OMPNumThreadsClause *C) {
 
 void OMPClauseReader::VisitOMPAffinityClause(OMPAffinityClause *C) {
   C->setAffinity(Reader.ReadSubExpr());
+}
+
+void OMPClauseReader::VisitOMPPriorityClause(OMPPriorityClause *C) {
+  C->setPriority(Reader.ReadSubExpr());
 }
 
 void OMPClauseReader::VisitOMPCollapseClause(OMPCollapseClause *C) {

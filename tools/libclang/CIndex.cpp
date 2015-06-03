@@ -1992,6 +1992,8 @@ void OMPClauseEnqueue::VisitOMPNumThreadsClause(const OMPNumThreadsClause *C) {}
 
 void OMPClauseEnqueue::VisitOMPAffinityClause(const OMPAffinityClause *C) {}
 
+void OMPClauseEnqueue::VisitOMPPriorityClause(const OMPPriorityClause *C) {}
+
 void OMPClauseEnqueue::VisitOMPCollapseClause(const OMPCollapseClause *C) {}
 
 void OMPClauseEnqueue::VisitOMPDefaultClause(const OMPDefaultClause *C) {}

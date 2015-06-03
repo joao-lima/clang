@@ -193,6 +193,7 @@ OPENMP_DIRECTIVE_EXT(target_teams_distribute_parallel_for_simd,
 OPENMP_CLAUSE(if, OMPIfClause)
 OPENMP_CLAUSE(num_threads, OMPNumThreadsClause)
 OPENMP_CLAUSE(affinity, OMPAffinityClause)
+OPENMP_CLAUSE(priority, OMPPriorityClause)
 OPENMP_CLAUSE(device, OMPDeviceClause)
 OPENMP_CLAUSE(final, OMPFinalClause)
 OPENMP_CLAUSE(default, OMPDefaultClause)
@@ -396,6 +397,7 @@ OPENMP_TASK_CLAUSE(firstprivate)
 OPENMP_TASK_CLAUSE(shared)
 OPENMP_TASK_CLAUSE(depend)
 OPENMP_TASK_CLAUSE(affinity)
+OPENMP_TASK_CLAUSE(priority)
 
 // Static attributes for 'default' clause.
 OPENMP_DEFAULT_KIND(none)
@@ -472,6 +474,7 @@ OPENMP_TARGET_CLAUSE(map)
 OPENMP_TARGET_CLAUSE(nowait)
 OPENMP_TARGET_CLAUSE(depend)
 OPENMP_TARGET_CLAUSE(affinity)
+OPENMP_TARGET_CLAUSE(priority)
 
 // Clauses allowed for OpenMP directive 'target data'.
 OPENMP_TARGET_DATA_CLAUSE(if)

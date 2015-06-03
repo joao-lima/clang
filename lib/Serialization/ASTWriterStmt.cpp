@@ -1692,6 +1692,10 @@ void OMPClauseWriter::VisitOMPAffinityClause(OMPAffinityClause *C) {
   Writer.AddStmt(C->getAffinity());
 }
 
+void OMPClauseWriter::VisitOMPPriorityClause(OMPPriorityClause *C) {
+  Writer.AddStmt(C->getPriority());
+}
+
 void OMPClauseWriter::VisitOMPCollapseClause(OMPCollapseClause *C) {
   Writer.AddStmt(C->getNumForLoops());
 }

@@ -279,6 +279,55 @@ public:
   StmtRange children() { return StmtRange(&Affinity, &Affinity+ 1); }
 };
 
+//
+/// \brief This represents 'priority' clause in the '#pragma omp ...'
+/// directive.
+///
+/// \code
+/// #pragma omp task priority(a)
+/// \endcode
+/// In this example directive '#pragma omp parallel' has clause 'priority'
+/// with single expression 'a'.
+///
+class OMPPriorityClause : public OMPClause {
+  friend class OMPClauseReader;
+  /// \brief Priority.
+  Stmt *Priority;
+  /// \brief Set a task priority.
+  ///
+  /// \param E Priority id.
+  ///
+  void setPriority(Expr *E) { Priority = E; }
+
+public:
+  /// \brief Build 'priority' clause.
+  ///
+  /// \param E Expression associated with this clause.
+  /// \param StartLoc Starting location of the clause.
+  /// \param EndLoc Ending location of the clause.
+  ///
+  OMPPriorityClause(Expr *E, SourceLocation StartLoc, SourceLocation EndLoc)
+      : OMPClause(OMPC_priority, StartLoc, EndLoc), Priority(E) {}
+
+  /// \brief Build an empty clause.
+  ///
+  explicit OMPPriorityClause()
+      : OMPClause(OMPC_priority, SourceLocation(), SourceLocation()),
+        Priority(0) {}
+
+  /// \brief Return priority id.
+  Expr *getPriority() { return dyn_cast_or_null<Expr>(Priority); }
+
+  /// \brief Return priority id.
+  Expr *getPriority() const { return dyn_cast_or_null<Expr>(Priority); }
+
+  static bool classof(const OMPClause *T) {
+    return T->getClauseKind() == OMPC_priority;
+  }
+
+  StmtRange children() { return StmtRange(&Priority, &Priority+ 1); }
+};
+
 /// \brief This represents 'num_threads' clause in the '#pragma omp ...'
 /// directive.
 ///

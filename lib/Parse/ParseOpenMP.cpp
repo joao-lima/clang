@@ -1312,6 +1312,7 @@ OMPClause *Parser::ParseOpenMPClause(OpenMPDirectiveKind DKind,
   case OMPC_collapse:
   case OMPC_final:
   case OMPC_affinity:
+  case OMPC_priority:
   case OMPC_safelen:
   case OMPC_simdlen:
   case OMPC_num_teams:
@@ -1458,6 +1459,9 @@ OMPClause *Parser::ParseOpenMPClause(OpenMPDirectiveKind DKind,
 ///
 ///    affinity-clause
 ///      'affinity' '(' expression ')'
+///
+///    priority-clause
+///      'priority' '(' expression ')'
 ///
 OMPClause *Parser::ParseOpenMPSingleExprClause(OpenMPClauseKind Kind) {
   SourceLocation Loc = Tok.getLocation();

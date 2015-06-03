@@ -7730,6 +7730,10 @@ public:
   OMPClause *ActOnOpenMPAffinityClause(Expr *Affinity,
                                        SourceLocation StartLoc,
                                        SourceLocation EndLoc);
+  /// \brief Called on well-formed 'priority' clause.
+  OMPClause *ActOnOpenMPPriorityClause(Expr *Priority,
+                                       SourceLocation StartLoc,
+                                       SourceLocation EndLoc);
   /// \brief Called on well-formed 'device' clause.
   OMPClause *ActOnOpenMPDeviceClause(Expr *Device, SourceLocation StartLoc,
                                      SourceLocation EndLoc);
